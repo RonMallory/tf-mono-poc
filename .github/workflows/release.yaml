@@ -46,14 +46,12 @@ jobs:
     - name: Create and push tag
       if: steps.check_changes.outputs.changed_dirs
       run: |
-          if: steps.check_changes.outputs.changed_dirs
-          run: |
-            for dir in ${{ steps.check_changes.outputs.changed_dirs }}; do
-              echo "Changed directory is $dir"
-              TAG_NAME="changes-${{ steps.datetime.outputs.timestamp }}-$dir"
-              git config user.name github-actions
-              git config user.email github-actions@github.com
-              git tag $TAG_NAME
-              git push origin $TAG_NAME
-              echo "Tag $TAG_NAME created for $dir."
-            done
+        for dir in ${{ steps.check_changes.outputs.changed_dirs }}; do
+          echo "Changed directory is $dir"
+          TAG_NAME="changes-${{ steps.datetime.outputs.timestamp }}-$dir"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          echo "Tag $TAG_NAME created for $dir."
+        done
