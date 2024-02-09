@@ -8,7 +8,7 @@ on:
     branches:
       - main
     paths:
-      - '${{ env.TARGET_DIR }}/**'  # Use the target directory variable here
+      - 'stuff/**'  # Use the target directory variable here
 
 permissions: # Ensure the workflow has the necessary permissions to push tags
   contents: write
