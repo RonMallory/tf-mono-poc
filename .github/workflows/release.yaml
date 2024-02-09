@@ -7,6 +7,9 @@ on:
     paths:
       - 'stuff/**'
 
+permissions: # Ensure the workflow has the necessary permissions to push tags
+  contents: write
+
 jobs:
   tag-on-change:
     runs-on: ubuntu-latest
