@@ -1,0 +1,32 @@
+name: Tagging Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'stuff/**'
+
+jobs:
+  tag-on-change:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Get current date and time
+      id: datetime
+      run: echo "::set-output name=timestamp::$(date +'%Y%m%d%H%M%S')"
+
+    - name: Create tag
+      run: |
+        CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^stuff/' | awk -F'/' '{print $1"/"$2}' | uniq)
+        if [ ! -z "$CHANGED_DIRS" ]; then
+          for DIR in $CHANGED_DIRS; do
+            TAG_NAME="${DIR//\//-}-${{ steps.datetime.outputs.timestamp }}"
+            git tag $TAG_NAME
+            git push origin $TAG_NAME
+            echo "Tag $TAG_NAME created for changes in $DIR"
+          done
+        else
+          echo "No changes detected in stuff/* directories."
+        fi
