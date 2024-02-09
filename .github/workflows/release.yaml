@@ -49,6 +49,7 @@ jobs:
       if: steps.check_changes.outputs.changed_dirs
       run: |
         for dir in ${{ steps.check_changes.outputs.changed_dirs }}; do
+          dir=${dir#${{ env.TARGET_DIR }}/}  # Strip env.TARGET_DIR from the start of $dir
           echo "Changed directory is $dir"
           TAG_NAME="$dir-${{ steps.datetime.outputs.timestamp }}"
           git config user.name github-actions
