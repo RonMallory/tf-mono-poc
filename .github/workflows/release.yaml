@@ -25,22 +25,28 @@ jobs:
     - name: Check for changes in subdirectories
       id: check_changes
       run: |
-        CHANGED=false
+        CHANGED_DIRS=""
         for dir in stuff/*; do
-          if git diff --quiet HEAD^ HEAD -- $dir; then
-            echo "::set-output name=changed::true"
-            CHANGED=true
-            break
+          if ! git diff --quiet HEAD^ HEAD -- "$dir"; then
+            # If changes are detected, append the directory to the list
+            CHANGED_DIRS="$CHANGED_DIRS $dir"
           fi
         done
-        if [ "$CHANGED" = false ]; then
+
+        if [ -z "$CHANGED_DIRS" ]; then
           echo "No changes detected in stuff/* directories."
           exit 0
+        else
+          # Output the changed directories for further steps
+          echo "Changed directories: $CHANGED_DIRS"
+          echo "::set-output name=changed_dirs::$CHANGED_DIRS"
         fi
 
+
     - name: Create and push tag
-      if: steps.check_changes.outputs.changed == 'true'
+      if: steps.check_changes.outputs.changed_dirs
       run: |
+        echo "Changed directories are ${{ steps.check_changes.outputs.changed_dirs }}"
         TAG_NAME="changes-${{ steps.datetime.outputs.timestamp }}"
         git config user.name github-actions
         git config user.email github-actions@github.com
