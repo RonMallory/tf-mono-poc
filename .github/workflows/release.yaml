@@ -12,21 +12,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Fetch all history for all branches and tags
 
     - name: Get current date and time
       id: datetime
       run: echo "::set-output name=timestamp::$(date +'%Y%m%d%H%M%S')"
 
-    - name: Create tag
+    - name: Check for changes in subdirectories
+      id: check_changes
       run: |
-        CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^stuff/' | awk -F'/' '{print $1"/"$2}' | uniq)
-        if [ ! -z "$CHANGED_DIRS" ]; then
-          for DIR in $CHANGED_DIRS; do
-            TAG_NAME="${DIR//\//-}-${{ steps.datetime.outputs.timestamp }}"
-            git tag $TAG_NAME
-            git push origin $TAG_NAME
-            echo "Tag $TAG_NAME created for changes in $DIR"
-          done
-        else
+        CHANGED=false
+        for dir in stuff/*; do
+          if git diff --quiet HEAD^ HEAD -- $dir; then
+            echo "::set-output name=changed::true"
+            CHANGED=true
+            break
+          fi
+        done
+        if [ "$CHANGED" = false ]; then
           echo "No changes detected in stuff/* directories."
+          exit 0
         fi
+
+    - name: Create and push tag
+      if: steps.check_changes.outputs.changed == 'true'
+      run: |
+        TAG_NAME="changes-${{ steps.datetime.outputs.timestamp }}"
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git tag $TAG_NAME
+        git push origin $TAG_NAME
+        echo "Tag $TAG_NAME created for changes."
