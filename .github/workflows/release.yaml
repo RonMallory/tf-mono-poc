@@ -1,11 +1,14 @@
 name: Tagging Workflow
 
+env:
+  TARGET_DIR: 'stuff'  # Define the target directory here
+
 on:
   push:
     branches:
       - main
     paths:
-      - 'stuff/**'
+      - '${{ env.TARGET_DIR }}/**'  # Use the target directory variable here
 
 permissions: # Ensure the workflow has the necessary permissions to push tags
   contents: write
@@ -26,7 +29,7 @@ jobs:
       id: check_changes
       run: |
         CHANGED_DIRS=""
-        for dir in stuff/*; do
+        for dir in ${{ env.TARGET_DIR }}/*; do  # Use the target directory variable here
           if ! git diff --quiet HEAD^ HEAD -- "$dir"; then
             # If changes are detected, append the directory to the list
             CHANGED_DIRS="$CHANGED_DIRS $dir"
@@ -34,7 +37,7 @@ jobs:
         done
 
         if [ -z "$CHANGED_DIRS" ]; then
-          echo "No changes detected in stuff/* directories."
+          echo "No changes detected in ${{ env.TARGET_DIR }}/* directories."  # Use the target directory variable here
           exit 0
         else
           # Output the changed directories for further steps
@@ -42,13 +45,12 @@ jobs:
           echo "::set-output name=changed_dirs::$CHANGED_DIRS"
         fi
 
-
     - name: Create and push tag
       if: steps.check_changes.outputs.changed_dirs
       run: |
         for dir in ${{ steps.check_changes.outputs.changed_dirs }}; do
           echo "Changed directory is $dir"
-          TAG_NAME="changes-${{ steps.datetime.outputs.timestamp }}-$dir"
+          TAG_NAME="$dir-${{ steps.datetime.outputs.timestamp }}"
           git config user.name github-actions
           git config user.email github-actions@github.com
           git tag $TAG_NAME
