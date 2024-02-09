@@ -46,7 +46,6 @@ jobs:
     - name: Create and push tag
       if: steps.check_changes.outputs.changed_dirs
       run: |
-        - name: Loop through changed directories and create tags
           if: steps.check_changes.outputs.changed_dirs
           run: |
             for dir in ${{ steps.check_changes.outputs.changed_dirs }}; do
